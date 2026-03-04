@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Lang {
+  ar
+  fr
+  en
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  AGENT
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  cancelled
+  paid
+}
+
+enum PickupType {
+  airport
+  downtown
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         Role
+  firstName    String?
+  lastName     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  bookings     Booking[]
+}
+
+model City {
+  id           String            @id @default(cuid())
+  isActive     Boolean           @default(true)
+  sortOrder    Int               @default(0)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  translations CityTranslation[]
+  cars         Car[]
+  seasons      Season[]
+  landings     LandingPage[]
+}
+
+model CityTranslation {
+  id          String @id @default(cuid())
+  cityId      String
+  lang        Lang
+  name        String
+  slug        String
+  description String
+  seoTitle    String
+  seoDesc     String
+  faqJson     Json
+  city        City   @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@unique([cityId, lang])
+  @@unique([lang, slug])
+}
+
+model Car {
+  id                  String            @id @default(cuid())
+  cityId              String
+  basePricePerDay     Decimal           @db.Decimal(10, 2)
+  airportSurcharge    Decimal           @default(0) @db.Decimal(10, 2)
+  insurancePerDay     Decimal           @default(0) @db.Decimal(10, 2)
+  longDurationPercent Int               @default(0)
+  seats               Int
+  doors               Int
+  gear                String
+  fuelType            String
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  city                City              @relation(fields: [cityId], references: [id])
+  translations        CarTranslation[]
+  images              CarImage[]
+  features            CarFeature[]
+  bookings            Booking[]
+  reviews             Review[]
+}
+
+model CarTranslation {
+  id          String @id @default(cuid())
+  carId       String
+  lang        Lang
+  name        String
+  slug        String
+  description String
+  seoTitle    String
+  seoDesc     String
+  car         Car    @relation(fields: [carId], references: [id], onDelete: Cascade)
+
+  @@unique([carId, lang])
+  @@unique([lang, slug])
+}
+
+model CarImage {
+  id        String   @id @default(cuid())
+  carId     String
+  mediaId   String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  car       Car      @relation(fields: [carId], references: [id], onDelete: Cascade)
+  media     Media    @relation(fields: [mediaId], references: [id])
+}
+
+model CarFeature {
+  id        String @id @default(cuid())
+  carId     String
+  key       String
+  value     String
+  car       Car    @relation(fields: [carId], references: [id], onDelete: Cascade)
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  reference       String        @unique
+  carId           String
+  userId          String?
+  cityId          String
+  startDate       DateTime
+  endDate         DateTime
+  pickupType      PickupType
+  pickupLocation  String
+  totalPrice      Decimal       @db.Decimal(10, 2)
+  status          BookingStatus @default(pending)
+  insuranceChosen Boolean       @default(false)
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  car             Car           @relation(fields: [carId], references: [id])
+  city            City          @relation(fields: [cityId], references: [id])
+  user            User?         @relation(fields: [userId], references: [id])
+
+  @@index([carId, startDate, endDate])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  carId      String
+  authorName String
+  rating     Int
+  comment    String
+  approved   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  car        Car      @relation(fields: [carId], references: [id], onDelete: Cascade)
+}
+
+model BlogPost {
+  id           String                @id @default(cuid())
+  coverMediaId String?
+  category     String
+  tags         String[]
+  isPublished  Boolean               @default(false)
+  publishedAt  DateTime?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  translations BlogPostTranslation[]
+  coverMedia   Media?                @relation(fields: [coverMediaId], references: [id])
+}
+
+model BlogPostTranslation {
+  id         String   @id @default(cuid())
+  blogPostId String
+  lang       Lang
+  title      String
+  slug       String
+  excerpt    String
+  contentMd  String
+  seoTitle   String
+  seoDesc    String
+  blogPost   BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+
+  @@unique([blogPostId, lang])
+  @@unique([lang, slug])
+}
+
+model LandingPage {
+  id           String                   @id @default(cuid())
+  cityId        String
+  templateKey   String
+  isPublished   Boolean                  @default(false)
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+  city          City                     @relation(fields: [cityId], references: [id])
+  translations  LandingPageTranslation[]
+}
+
+model LandingPageTranslation {
+  id            String      @id @default(cuid())
+  landingPageId String
+  lang          Lang
+  title         String
+  slug          String
+  heroTitle     String
+  heroSubtitle  String
+  bodyMd        String
+  seoTitle      String
+  seoDesc       String
+  landingPage   LandingPage @relation(fields: [landingPageId], references: [id], onDelete: Cascade)
+
+  @@unique([landingPageId, lang])
+  @@unique([lang, slug])
+}
+
+model PriceRule {
+  id                String   @id @default(cuid())
+  name              String
+  weekendMultiplier Decimal  @default(1) @db.Decimal(5, 2)
+  airportSurcharge  Decimal  @default(0) @db.Decimal(10, 2)
+  longDurationDays  Int      @default(7)
+  longDurationPct   Int      @default(0)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Season {
+  id          String   @id @default(cuid())
+  cityId       String
+  name        String
+  startDate   DateTime
+  endDate     DateTime
+  multiplier  Decimal  @default(1) @db.Decimal(5, 2)
+  createdAt   DateTime @default(now())
+  city        City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+}
+
+model Media {
+  id         String   @id @default(cuid())
+  url        String
+  alt        String?
+  mimeType   String
+  sizeBytes  Int
+  createdAt  DateTime @default(now())
+  blogPosts  BlogPost[]
+  carImages  CarImage[]
+}
