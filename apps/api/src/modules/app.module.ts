@@ -7,6 +7,7 @@ import { CarsModule } from './cars/cars.module.js';
 import { BookingsModule } from './bookings/bookings.module.js';
 import { BlogModule } from './blog/blog.module.js';
 import { LandingsModule } from './landings/landings.module.js';
+import { SearchModule } from './search/search.module.js';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { LandingsModule } from './landings/landings.module.js';
     AuthModule,
     CitiesModule,
     CarsModule,
+    SearchModule,
     BookingsModule,
     BlogModule,
     LandingsModule

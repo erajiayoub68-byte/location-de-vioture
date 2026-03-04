@@ -1,7 +1,8 @@
-import { Locale, locales } from './i18n';
+import { type Locale, locales } from './i18n';
 
 export function buildAlternateLanguages(pathByLocale: Record<Locale, string>) {
   return {
+    canonical: pathByLocale.fr,
     languages: {
       ar: pathByLocale.ar,
       fr: pathByLocale.fr,
@@ -12,7 +13,7 @@ export function buildAlternateLanguages(pathByLocale: Record<Locale, string>) {
 }
 
 export function canonicalUrl(path: string) {
-  return `${process.env.NEXT_PUBLIC_SITE_URL}${path}`;
+  return `${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'}${path}`;
 }
 
 export function sitemapSources() {

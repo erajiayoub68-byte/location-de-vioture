@@ -8,7 +8,7 @@ class LangQueryDto {
   lang?: 'ar' | 'fr' | 'en';
 }
 
-@Controller('api/cities')
+@Controller('cities')
 export class CitiesController {
   constructor(private readonly citiesService: CitiesService) {}
 

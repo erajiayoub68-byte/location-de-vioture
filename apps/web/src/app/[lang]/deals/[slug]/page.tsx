@@ -1,3 +1,3 @@
-export default function DealDetailsPage() {
-  return <article>Deal details page with CTA and SEO blocks.</article>;
+export default function DealDetailsPage({ params }: { params: { slug: string } }) {
+  return <article className="container card">Deal: {params.slug}</article>;
 }

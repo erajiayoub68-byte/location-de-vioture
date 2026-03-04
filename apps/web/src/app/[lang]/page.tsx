@@ -1,22 +1,38 @@
-import { directionByLocale, locales } from '../../lib/i18n';
-import { buildAlternateLanguages } from '../../lib/seo';
+import { CarCard } from '@/components/CarCard';
+import { CityCard } from '@/components/CityCard';
+import { SearchWidget } from '@/components/SearchWidget';
+import { cars, cities, homeCopy } from '@/data/content';
+import type { Locale } from '@/lib/i18n';
+import { buildAlternateLanguages } from '@/lib/seo';
 
-export async function generateStaticParams() {
-  return locales.map((lang) => ({ lang }));
-}
+export const revalidate = 600;
 
-export async function generateMetadata({ params }: { params: { lang: 'ar' | 'fr' | 'en' } }) {
+export async function generateMetadata({ params }: { params: { lang: Locale } }) {
   const { lang } = params;
   return {
-    title: { fr: 'Location voiture Maroc', en: 'Car rental Morocco', ar: 'كراء سيارات المغرب' }[lang],
+    title: homeCopy[lang].title,
+    description: homeCopy[lang].subtitle,
     alternates: buildAlternateLanguages({ ar: '/ar', fr: '/fr', en: '/en' })
   };
 }
 
-export default function HomePage({ params }: { params: { lang: 'ar' | 'fr' | 'en' } }) {
+export default function HomePage({ params }: { params: { lang: Locale } }) {
+  const { lang } = params;
   return (
-    <main dir={directionByLocale[params.lang]}>
-      <h1>Conversion-first home with search widget, featured cars, reviews and FAQs.</h1>
+    <main className="container grid">
+      <section className="card">
+        <h1>{homeCopy[lang].title}</h1>
+        <p>{homeCopy[lang].subtitle}</p>
+      </section>
+      <SearchWidget lang={lang} />
+      <section>
+        <h2>Featured Cars</h2>
+        <div className="grid cards">{cars.map((car) => <CarCard key={car.id} car={car} lang={lang} />)}</div>
+      </section>
+      <section>
+        <h2>Top Cities</h2>
+        <div className="grid cards">{cities.map((city) => <CityCard key={city.id} city={city} lang={lang} />)}</div>
+      </section>
     </main>
   );
 }
